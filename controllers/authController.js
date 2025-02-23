@@ -39,3 +39,14 @@ exports.signup = async (req, res) => {
     res.status(500).json({ success: false, message: "User creation failed" });
   }
 };
+
+exports.signin = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ success: false, message: "Invalid sign in credentials" });
+  }
+};
