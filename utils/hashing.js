@@ -5,3 +5,9 @@ exports.doHash = (value, saltValue) => {
 
   return result;
 };
+
+exports.doHashValidation = (value, hashedValue) => {
+  const result = compare(value, hashedValue);
+
+  return result;
+};
