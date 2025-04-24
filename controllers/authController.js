@@ -3,6 +3,8 @@ const { signupSchema, signinSchema } = require("../middleware/validator");
 const userModel = require("../models/userModel");
 const { doHash, doHashValidation } = require("../utils/hashing");
 
+//signup
+
 exports.signup = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -41,6 +43,7 @@ exports.signup = async (req, res) => {
   }
 };
 
+//signin
 exports.signin = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -73,7 +76,10 @@ exports.signin = async (req, res) => {
         email: existingUser.email,
         verified: existingUser.verified,
       },
-      process.env.TOKEN_SECRET
+      process.env.TOKEN_SECRET,
+      {
+        expiresIn: "8h",
+      }
     );
 
     res
@@ -89,5 +95,37 @@ exports.signin = async (req, res) => {
       });
   } catch (error) {
     console.log(error);
+  }
+};
+
+//signout
+exports.signout = async (req, res) => {
+  res
+    .clearCookie("Auhorization")
+    .status(200)
+    .json({ success: true, message: "User signed out successfully!" });
+};
+
+//verification
+
+exports.sendVerificationCode = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const existingUser = await user.findOne({ email });
+
+    if (!existingUser) {
+      return res(404).josn({ success: false, message: "User does not exist!" });
+    }
+    if (existingUser.verified) {
+      return res
+        .status(400)
+        .json({ success: false, message: "User is already verified!" });
+    }
+
+    const codeValue = Math.floor(Math.random() * 100000).toString();
+  } catch (error) {
+    console.log(error);
+    //   res.status(500).json({ success: false, message: "Verification failed" });
+    //
   }
 };
