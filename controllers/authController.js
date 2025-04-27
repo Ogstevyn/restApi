@@ -144,6 +144,7 @@ exports.sendVerificationCode = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ success: false, message: "Verification failed" });
+    //   res.status(500).json({ success: false, message: "Verification failed" });
+    //
   }
 };
