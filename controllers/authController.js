@@ -1,7 +1,8 @@
 const { jwt } = require("jsonwebtoken");
 const { signupSchema, signinSchema } = require("../middleware/validator");
 const userModel = require("../models/userModel");
-const { doHash, doHashValidation } = require("../utils/hashing");
+const { doHash, doHashValidation, hmacProcess } = require("../utils/hashing");
+const transport = require("../middleware/sendMail");
 
 //signup
 
@@ -111,8 +112,7 @@ exports.signout = async (req, res) => {
 exports.sendVerificationCode = async (req, res) => {
   const { email } = req.body;
   try {
-    const existingUser = await user.findOne({ email });
-
+    const existingUser = await userModel.findOne({ email });
     if (!existingUser) {
       return res(404).josn({ success: false, message: "User does not exist!" });
     }
@@ -123,6 +123,25 @@ exports.sendVerificationCode = async (req, res) => {
     }
 
     const codeValue = Math.floor(Math.random() * 100000).toString();
+    let info = await transport.sendMail({
+      from: process.env.NODE_CODE_SENDING_EMAIL_ADDRESS,
+      to: existingUser.email,
+      subject: "Verification code",
+      html: "<h1>" + codeValue + "</h1>",
+    });
+
+    if (info.accepted[0] === existingUser.email) {
+      const hashedCodeValue = hmacProcess(
+        codeValue,
+        process.env.HMAC_VERIFICATION_CODE_SECRET
+      );
+      existingUser.sendVerificationCode = hashedCodeValue;
+      existingUser.verificationCodeValidation = Date.now() + 10 * 60 * 1000; //10 minutes
+      await existingUser.save();
+      return res
+        .status(200)
+        .json({ success: true, message: "Verification code sent!" });
+    }
   } catch (error) {
     console.log(error);
     //   res.status(500).json({ success: false, message: "Verification failed" });
